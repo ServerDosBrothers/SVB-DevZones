@@ -46,13 +46,13 @@ int g_HaloSprite;
 Handle hOnClientEntry = INVALID_HANDLE;
 Handle hOnClientLeave = INVALID_HANDLE;
 
+enum struct Zone_t
+{
+	char liName[64];
+	bool liThis;
+}
 
-enum g_eList {
-	String:liName[64], 
-	bool:liThis
-};
-
-int g_iZones[2048][MAX_ZONES][g_eList]; // max zones = 256
+Zone_t g_iZones[2048][MAX_ZONES]; // max zones = 256
 
 
 // cvars
@@ -125,7 +125,7 @@ public void OnPluginEnd()
 
 public void resetClient(int client) {
 	for (int i = 0; i < MAX_ZONES; i++)
-	g_iZones[client][i][liThis] = false;
+	g_iZones[client][i].liThis = false;
 }
 
 public void CVarChange(Handle convar_hndl, const char[] oldValue, const char[] newValue) {
@@ -231,8 +231,8 @@ public void EntOut_OnStartTouch(const char[] output, int caller, int activator, 
 	char nBuf[64];
 	Entity_GetGlobalName(caller, nBuf, sizeof(nBuf));
 	int callerId = StringToInt(nBuf);
-	g_iZones[activator][callerId][liThis] = true;
-	Format(g_iZones[activator][callerId][liName], 64, sTargetName);
+	g_iZones[activator][callerId].liThis = true;
+	Format(g_iZones[activator][callerId].liName, 64, sTargetName);
 	//PrintToChatAll("E::%i::%s::", callerId, sTargetName);
 	Call_StartForward(hOnClientEntry);
 	Call_PushCell(activator);
@@ -255,8 +255,8 @@ public void EntOut_OnEndTouch(const char[] output, int caller, int activator, fl
 	char nBuf[64];
 	Entity_GetGlobalName(caller, nBuf, sizeof(nBuf));
 	int callerId = StringToInt(nBuf);
-	g_iZones[activator][callerId][liThis] = false;
-	Format(g_iZones[activator][callerId][liName], 64, "");
+	g_iZones[activator][callerId].liThis = false;
+	Format(g_iZones[activator][callerId].liName, 64, "");
 	//PrintToChatAll("EX::%i::%s::", callerId, sTargetName);
 	Call_StartForward(hOnClientLeave);
 	Call_PushCell(activator);
@@ -499,12 +499,12 @@ public int Native_InZone(Handle plugin, int argc) {
 	{
 		if (same)
 		{
-			if (StrEqual(g_iZones[client][i][liName], name, sensitive) && g_iZones[client][i][liThis])
+			if (StrEqual(g_iZones[client][i].liName, name, sensitive) && g_iZones[client][i].liThis)
 				return true;
 		}
 		else
 		{
-			if (StrContains(g_iZones[client][i][liName], name, sensitive) == 0 && g_iZones[client][i][liThis])
+			if (StrContains(g_iZones[client][i].liName, name, sensitive) == 0 && g_iZones[client][i].liThis)
 				return true;
 		}
 		
@@ -517,8 +517,8 @@ public int Native_getMostRecentActiveZone(Handle plugin, int argc) {
 	
 	int size = GetArraySize(g_Zones);
 	for (int i = 0; i < size; ++i) {
-		if (g_iZones[client][i][liThis]) {
-			SetNativeString(2, g_iZones[client][i][liName], 64);
+		if (g_iZones[client][i].liThis) {
+			SetNativeString(2, g_iZones[client][i].liName, 64);
 			return true;
 		}
 	}
@@ -656,27 +656,27 @@ public Action BeamBoxAll(Handle timer, any data) {
 				{
 					if (IsbetweenRect(NULL_VECTOR, posA, posB, p))
 					{
-						if (!g_iZones[p][i][liThis])
+						if (!g_iZones[p][i].liThis)
 						{
 							// entra
-							g_iZones[p][i][liThis] = true;
-							Format(g_iZones[p][i][liName], 64, nombre);
+							g_iZones[p][i].liThis = true;
+							Format(g_iZones[p][i].liName, 64, nombre);
 							Call_StartForward(hOnClientEntry);
 							Call_PushCell(p);
-							Call_PushString(g_iZones[p][i][liName]);
+							Call_PushString(g_iZones[p][i].liName);
 							Call_Finish();
 						}
 					}
 					else
 					{
-						if (g_iZones[p][i][liThis])
+						if (g_iZones[p][i].liThis)
 						{
 							// sale
-							g_iZones[p][i][liThis] = false;
-							Format(g_iZones[p][i][liName], 64, nombre);
+							g_iZones[p][i].liThis = false;
+							Format(g_iZones[p][i].liName, 64, nombre);
 							Call_StartForward(hOnClientLeave);
 							Call_PushCell(p);
-							Call_PushString(g_iZones[p][i][liName]);
+							Call_PushString(g_iZones[p][i].liName);
 							Call_Finish();
 						}
 					}
